@@ -1,11 +1,10 @@
 import json
 import os
-import google.generativeai as genai
+from google import genai
 
 
 def analyze_costs(resources: list[dict]) -> dict:
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
     resource_summary = json.dumps(resources, indent=2)
 
@@ -41,7 +40,10 @@ Respond with a JSON object in exactly this structure:
 
 Return only valid JSON, no markdown fences."""
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=prompt,
+    )
     raw = response.text.strip()
 
     # Strip markdown fences if model includes them anyway
