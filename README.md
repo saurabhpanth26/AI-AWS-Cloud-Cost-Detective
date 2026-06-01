@@ -11,7 +11,7 @@ An AI-powered tool that investigates AWS cloud costs automatically. It scans res
 | Auth | Custom JWT Auth (bcrypt + PyJWT) |
 | Cloud Data | AWS SDK (boto3) |
 | Cloud | AWS |
-| AI Analysis | Anthropic Claude API |
+| AI Analysis | Google Gemini 2.0 Flash (free) |
 | Database | PostgreSQL (Docker / AWS RDS) |
 | Live Updates | FastAPI WebSocket |
 | Containerisation | Docker + Docker Compose |
@@ -41,8 +41,8 @@ An AI-powered tool that investigates AWS cloud costs automatically. It scans res
                 :                      :                  :
                 ▼                      ▼                  ▼
          ┌─────────────┐     ┌──────────────┐    ┌──────────────┐
-         │   AWS SDK   │     │   FASTAPI    │    │  ANTHROPIC   │
-         │   (boto3)   │     │  WEBSOCKET   │    │  CLAUDE API  │
+         │   AWS SDK   │     │   FASTAPI    │    │   GOOGLE     │
+         │   (boto3)   │     │  WEBSOCKET   │    │  GEMINI API  │
          │             │     │  (Progress)  │    │              │
          │ EC2/RDS/S3  │     └──────┬───────┘    │ Cost Analysis│
          └──────┬──────┘            :            └──────┬───────┘
@@ -83,7 +83,7 @@ An AI-powered tool that investigates AWS cloud costs automatically. It scans res
 
 ④  Python ─·─·─► FastAPI WebSocket ─·─·─► React (live progress)
 
-⑤  Python ─·─·─► Anthropic Claude API ─·─·─► Cost analysis
+⑤  Python ─·─·─► Google Gemini API ─·─·─► Cost analysis
 
 ⑥  Python ─·─·─► PostgreSQL ─·─·─► Stores analysis history
 
@@ -107,7 +107,7 @@ This is the recommended way to run the application in production or on any remot
 
 - A Linux server (Ubuntu 22.04+ recommended) with **Docker** and **Docker Compose** installed
 - AWS credentials with read access to the target account
-- An Anthropic API key
+- A Google Gemini API key (free at [aistudio.google.com](https://aistudio.google.com))
 
 ### 1. Install Docker (if not already installed)
 
@@ -134,7 +134,7 @@ nano .env
 Fill in every value:
 
 ```env
-ANTHROPIC_API_KEY=sk-ant-...
+GEMINI_API_KEY=AIzaSy...
 JWT_SECRET=a_long_random_string_at_least_32_chars
 POSTGRES_USER=costdetective
 POSTGRES_PASSWORD=a_strong_password
@@ -204,7 +204,7 @@ Use this when developing — hot reload is enabled for both frontend and backend
 - Node.js 18+
 - A PostgreSQL instance (local or AWS RDS)
 - AWS credentials (`aws configure` or environment variables)
-- An Anthropic API key
+- A Google Gemini API key (free at [aistudio.google.com](https://aistudio.google.com))
 
 ### Backend
 
@@ -233,7 +233,7 @@ npm run dev
 2. Selects an AWS region to analyze
 3. Python backend fetches all resources using boto3
 4. Live progress is streamed to the UI via FastAPI WebSocket
-5. Resource data is sent to the Anthropic Claude API for cost analysis
+5. Resource data is sent to the Google Gemini API for cost analysis
 6. Analysis results are stored in PostgreSQL
 7. Final report with cost breakdown, suggestions, and fix commands is displayed
 

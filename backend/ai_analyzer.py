@@ -1,10 +1,11 @@
 import json
 import os
-import anthropic
+import google.generativeai as genai
 
 
 def analyze_costs(resources: list[dict]) -> dict:
-    client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+    model = genai.GenerativeModel("gemini-2.0-flash")
 
     resource_summary = json.dumps(resources, indent=2)
 
@@ -40,15 +41,10 @@ Respond with a JSON object in exactly this structure:
 
 Return only valid JSON, no markdown fences."""
 
-    message = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=4096,
-        messages=[{"role": "user", "content": prompt}]
-    )
+    response = model.generate_content(prompt)
+    raw = response.text.strip()
 
-    raw = message.content[0].text.strip()
-
-    # Strip markdown fences if present
+    # Strip markdown fences if model includes them anyway
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):
