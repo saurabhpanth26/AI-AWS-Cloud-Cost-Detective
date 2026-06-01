@@ -30,14 +30,14 @@ export default function Report() {
   const { id } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const [result, setResult] = useState<AnalysisResult | null>(location.state?.result ?? null)
+  const [result, setResult] = useState<AnalysisResult | null>((location.state?.result as AnalysisResult) ?? null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState<string | null>(null)
 
   useEffect(() => {
     if (!result && id) {
       api.getAnalysis(Number(id))
-        .then(data => setResult(data.analysis_result))
+        .then(data => setResult(data.analysis_result as AnalysisResult))
         .catch(() => setError('Failed to load analysis'))
     }
   }, [id, result])
