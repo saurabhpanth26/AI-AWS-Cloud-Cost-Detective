@@ -1,12 +1,12 @@
-# Prompt 3: Azure PostgreSQL + WebSocket Progress Tracking
+# Prompt 3: AWS RDS PostgreSQL + WebSocket Progress Tracking
 
-Build on top of the existing FastAPI backend. Add Azure Managed PostgreSQL for storing users and analysis history, and FastAPI WebSocket for live progress updates.
+Build on top of the existing FastAPI backend. Add AWS RDS PostgreSQL for storing users and analysis history, and FastAPI WebSocket for live progress updates.
 
 ## What to build
 
-### Database (Azure Managed PostgreSQL)
+### Database (AWS RDS PostgreSQL)
 
-- Connect to an Azure Managed PostgreSQL instance using `asyncpg` or `psycopg2`.
+- Connect to an AWS RDS PostgreSQL instance using `asyncpg` or `psycopg2`.
 - Store the database connection string in `.env` (`DATABASE_URL`).
 - Create two tables on startup:
   - `users` — id, email, password_hash, created_at
@@ -18,9 +18,9 @@ Build on top of the existing FastAPI backend. Add Azure Managed PostgreSQL for s
 
 - Add a WebSocket endpoint `ws://localhost:8000/ws/progress/{analysis_id}`.
 - During the `POST /api/analyze` flow, push progress messages through the WebSocket at each stage:
-  - `"Fetching resource groups..."`
-  - `"Scanning resources in <rg>..."`
-  - `"Analyzing costs with AI..."`
+  - `"Fetching AWS regions..."`
+  - `"Scanning resources in <region>..."`
+  - `"Analyzing costs with Claude AI..."`
   - `"Storing results..."`
   - `"Analysis complete"`
 - The frontend will connect to this WebSocket to show live progress.
@@ -34,7 +34,7 @@ Add `DATABASE_URL` to `.env.example`.
 ```
 backend/
 ├── main.py          (updated — history endpoint, WebSocket, DB init)
-├── azure_scanner.py (no change)
+├── aws_scanner.py   (no change)
 ├── ai_analyzer.py   (no change)
 ├── db.py            (new — DB connection, table creation, queries)
 ├── requirements.txt (updated — add asyncpg/psycopg2, websockets)

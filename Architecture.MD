@@ -23,23 +23,22 @@
                 :                      :                  :
                 ▼                      ▼                  ▼
          ┌─────────────┐     ┌──────────────┐    ┌──────────────┐
-         │  AZURE CLI  │     │   FASTAPI    │    │   OPENAI     │
-         │             │     │  WEBSOCKET   │    │    API       │
-         │ az resource │     │  (Progress)  │    │              │
-         │ list --rg   │     └──────┬───────┘    │ Cost Analysis│
+         │   AWS SDK   │     │   FASTAPI    │    │  ANTHROPIC   │
+         │   (boto3)   │     │  WEBSOCKET   │    │  CLAUDE API  │
+         │             │     │  (Progress)  │    │              │
+         │ EC2/RDS/S3  │     └──────┬───────┘    │ Cost Analysis│
          └──────┬──────┘            :            └──────┬───────┘
                 :                   : Live updates      :
                 ▼                   ▼                   :
          ┌─────────────┐   ┌───────────────┐            :
-         │   AZURE     │   │    REACT      │            :
-         │ (Resource   │   │  (Progress    │            :
-         │   Group)    │   │   Tracker)    │            :
+         │     AWS     │   │    REACT      │            :
+         │  (Region /  │   │  (Progress    │            :
+         │  Resources) │   │   Tracker)    │            :
          └─────────────┘   └───────────────┘            :
                                                         ▼
                                                  ┌──────────────┐
-                                                 │    AZURE     │
-                                                 │  POSTGRESQL  │
-                                                 │  (Managed)   │
+                                                 │   AWS RDS    │
+                                                 │  PostgreSQL  │
                                                  │              │
                                                  │ · users      │
                                                  │ · analyses   │

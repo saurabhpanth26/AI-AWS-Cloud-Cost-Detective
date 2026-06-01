@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+boto3
+anthropic
+python-dotenv
+psycopg2-binary
+PyJWT
+bcrypt
+websockets

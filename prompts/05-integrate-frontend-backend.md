@@ -6,7 +6,7 @@ Connect the React frontend to the FastAPI backend. Wire up WebSocket for live pr
 
 ### API Integration
 
-- When the user clicks "Run Analysis", send `POST /api/analyze` with the selected resource group and JWT in the `Authorization` header.
+- When the user clicks "Run Analysis", send `POST /api/analyze` with the selected AWS region and JWT in the `Authorization` header.
 - On the backend, validate the JWT on all protected endpoints (`/api/analyze`, `/api/history`, `/api/resource-groups`) using a FastAPI dependency.
 
 ### WebSocket Progress
@@ -22,10 +22,10 @@ Connect the React frontend to the FastAPI backend. Wire up WebSocket for live pr
 ### Report Display
 
 - Summary card at the top: total resources scanned, issues found, estimated savings.
-- Each issue shows: resource name, issue type (over-provisioned / unused / misconfigured), severity badge (high = red, medium = yellow, low = green), explanation, and a fix command in a copyable code block.
+- Each issue shows: resource name, issue type (over-provisioned / unused / misconfigured), severity badge (high = red, medium = yellow, low = green), explanation, and a fix command (AWS CLI or console steps) in a copyable code block.
 
 ### Final Testing
 
-- Test the full flow: signup → login → select RG → run analysis → see live progress → view report → check history.
+- Test the full flow: signup → login → select AWS region → run analysis → see live progress → view report → check history.
 
 Refer to `Architecture.MD` and `RequestFlow.MD`. This covers the full end-to-end flow — steps ① through ⑦.

@@ -1,6 +1,6 @@
 # AI Cloud Cost Detective
 
-An AI-powered tool that investigates Azure cloud costs automatically. It scans resources in an Azure Resource Group, detects cost issues like over-provisioning and misconfigurations, and provides actionable suggestions with fixes.
+An AI-powered tool that investigates AWS cloud costs automatically. It scans resources in an AWS region, detects cost issues like over-provisioning and misconfigurations, and provides actionable suggestions with fixes.
 
 ## Tech Stack
 
@@ -9,11 +9,12 @@ An AI-powered tool that investigates Azure cloud costs automatically. It scans r
 | Frontend | React (Vite + TypeScript + Tailwind) |
 | Backend | Python (FastAPI) |
 | Auth | Custom JWT Auth (bcrypt + PyJWT) |
-| Cloud Data | Azure CLI |
-| Cloud | Azure |
-| AI Analysis | OpenAI API |
-| Database | Azure Managed PostgreSQL |
+| Cloud Data | AWS SDK (boto3) |
+| Cloud | AWS |
+| AI Analysis | Anthropic Claude API |
+| Database | PostgreSQL (Docker / AWS RDS) |
 | Live Updates | FastAPI WebSocket |
+| Containerisation | Docker + Docker Compose |
 
 ## Architecture
 
@@ -40,24 +41,23 @@ An AI-powered tool that investigates Azure cloud costs automatically. It scans r
                 :                      :                  :
                 ▼                      ▼                  ▼
          ┌─────────────┐     ┌──────────────┐    ┌──────────────┐
-         │  AZURE CLI  │     │   FASTAPI    │    │   OPENAI     │
-         │             │     │  WEBSOCKET   │    │    API       │
-         │ az resource │     │  (Progress)  │    │              │
-         │ list --rg   │     └──────┬───────┘    │ Cost Analysis│
+         │   AWS SDK   │     │   FASTAPI    │    │  ANTHROPIC   │
+         │   (boto3)   │     │  WEBSOCKET   │    │  CLAUDE API  │
+         │             │     │  (Progress)  │    │              │
+         │ EC2/RDS/S3  │     └──────┬───────┘    │ Cost Analysis│
          └──────┬──────┘            :            └──────┬───────┘
                 :                   : Live updates      :
                 ▼                   ▼                   :
          ┌─────────────┐   ┌───────────────┐            :
-         │   AZURE     │   │    REACT      │            :
-         │ (Resource   │   │  (Progress    │            :
-         │   Group)    │   │   Tracker)    │            :
+         │     AWS     │   │    REACT      │            :
+         │  (Region /  │   │  (Progress    │            :
+         │  Resources) │   │   Tracker)    │            :
          └─────────────┘   └───────────────┘            :
                                                         ▼
                                                  ┌──────────────┐
-                                                 │    AZURE     │
-                                                 │  POSTGRESQL  │
-                                                 │  (Managed)   │
-                                                 │              │
+                                                 │  PostgreSQL  │
+                                                 │  (Docker /   │
+                                                 │   AWS RDS)   │
                                                  │ · users      │
                                                  │ · analyses   │
                                                  └──────┬───────┘
@@ -75,38 +75,136 @@ An AI-powered tool that investigates Azure cloud costs automatically. It scans r
 ## Request Flow
 
 ```
-①  User ─·─·─► React ─·─·─► FastAPI Auth ─·─·─► JWT (Azure PostgreSQL)
+①  User ─·─·─► React ─·─·─► FastAPI Auth ─·─·─► JWT (PostgreSQL)
 
-②  User selects Resource Group ─·─·─► Python Backend
+②  User selects AWS Region ─·─·─► Python Backend
 
-③  Python ─·─·─► Azure CLI ─·─·─► Fetches all resources in RG
+③  Python ─·─·─► boto3 ─·─·─► Fetches all resources in region
 
 ④  Python ─·─·─► FastAPI WebSocket ─·─·─► React (live progress)
 
-⑤  Python ─·─·─► OpenAI API ─·─·─► Cost analysis
+⑤  Python ─·─·─► Anthropic Claude API ─·─·─► Cost analysis
 
-⑥  Python ─·─·─► Azure PostgreSQL ─·─·─► Stores analysis history
+⑥  Python ─·─·─► PostgreSQL ─·─·─► Stores analysis history
 
 ⑦  React ◄·─·─·─ Final report with suggestions & fixes
 ```
 
 ## What It Detects
 
-- **Over-provisioned resources** — VMs, App Services, or databases sized larger than needed
-- **Unused resources** — Orphaned disks, unattached public IPs, idle load balancers
-- **Misconfigurations** — Wrong pricing tiers, missing auto-shutdown, no reserved instances
-- **Storage & logging costs** — Excessive log retention, no lifecycle policies on blob storage
+- **Over-provisioned resources** — EC2 instances, RDS, or Lambda sized larger than needed
+- **Unused resources** — Unattached EBS volumes, idle Elastic IPs, unused load balancers
+- **Misconfigurations** — Wrong instance families, missing auto-scaling, no reserved instances
+- **Storage & logging costs** — Excessive CloudWatch log retention, no S3 lifecycle policies
 
-## Prerequisites
+---
 
-- Azure CLI installed and logged in (`az login`)
-- An active Azure subscription with at least one resource group
-- An Azure Managed PostgreSQL instance
-- An OpenAI API key
+## Running on a Server (Docker — Recommended)
+
+This is the recommended way to run the application in production or on any remote server (EC2, VPS, etc.).
+
+### Prerequisites
+
+- A Linux server (Ubuntu 22.04+ recommended) with **Docker** and **Docker Compose** installed
+- AWS credentials with read access to the target account
+- An Anthropic API key
+
+### 1. Install Docker (if not already installed)
+
+```bash
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+### 2. Clone the repository
+
+```bash
+git clone https://github.com/your-org/ai-cloud-cost-detective.git
+cd ai-cloud-cost-detective
+```
+
+### 3. Configure environment variables
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+Fill in every value:
+
+```env
+ANTHROPIC_API_KEY=sk-ant-...
+JWT_SECRET=a_long_random_string_at_least_32_chars
+POSTGRES_USER=costdetective
+POSTGRES_PASSWORD=a_strong_password
+POSTGRES_DB=costdetective
+
+# AWS — leave blank if the server has an IAM role attached
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=...
+AWS_DEFAULT_REGION=us-east-1
+```
+
+> **Tip:** Generate a secure JWT secret with `openssl rand -hex 32`
+
+### 4. Build and start all services
+
+```bash
+docker compose up -d --build
+```
+
+This starts three containers:
+
+| Container  | What it runs                        | Port |
+|------------|-------------------------------------|------|
+| `db`       | PostgreSQL 16                       | internal only |
+| `backend`  | FastAPI (Python)                    | `8000` |
+| `frontend` | React app served by nginx           | `80` |
+
+### 5. Verify everything is running
+
+```bash
+docker compose ps
+docker compose logs -f
+```
+
+Open `http://<your-server-ip>` in a browser. You should see the login page.
+
+### 6. Stopping and restarting
+
+```bash
+# Stop
+docker compose down
+
+# Restart (without rebuilding)
+docker compose up -d
+
+# Rebuild after a code change
+docker compose up -d --build
+```
+
+### 7. View logs for a specific service
+
+```bash
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f db
+```
+
+---
+
+## Running Locally (Development)
+
+Use this when developing — hot reload is enabled for both frontend and backend.
+
+### Prerequisites
+
 - Python 3.10+
 - Node.js 18+
-
-## How to Run
+- A PostgreSQL instance (local or AWS RDS)
+- AWS credentials (`aws configure` or environment variables)
+- An Anthropic API key
 
 ### Backend
 
@@ -115,6 +213,7 @@ cd backend
 pip install -r requirements.txt
 cp .env.example .env   # fill in your credentials
 uvicorn main:app --reload
+# API available at http://localhost:8000
 ```
 
 ### Frontend
@@ -123,14 +222,26 @@ uvicorn main:app --reload
 cd frontend
 npm install
 npm run dev
+# UI available at http://localhost:5173
 ```
+
+---
 
 ## How It Works
 
-1. User signs up / logs in via custom JWT auth (credentials stored in Azure PostgreSQL)
-2. Selects an Azure Resource Group to analyze
-3. Python backend fetches all resources using Azure CLI
+1. User signs up / logs in via custom JWT auth (credentials stored in PostgreSQL)
+2. Selects an AWS region to analyze
+3. Python backend fetches all resources using boto3
 4. Live progress is streamed to the UI via FastAPI WebSocket
-5. Resource data is sent to OpenAI API for cost analysis
-6. Analysis results are stored in Azure PostgreSQL
+5. Resource data is sent to the Anthropic Claude API for cost analysis
+6. Analysis results are stored in PostgreSQL
 7. Final report with cost breakdown, suggestions, and fix commands is displayed
+
+---
+
+## Security Notes
+
+- Never commit your `.env` file — it is listed in `.gitignore`
+- Use a strong, unique `JWT_SECRET` in production
+- Restrict the AWS IAM user/role to read-only permissions (e.g. `ReadOnlyAccess` policy)
+- Place the server behind a reverse proxy (nginx / Caddy) with HTTPS for production use
